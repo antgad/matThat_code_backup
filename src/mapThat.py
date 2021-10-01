@@ -60,6 +60,8 @@ class mapThat:
         with open(key_data) as json_file:
             data = json.load(json_file)
             self.api_key_1 = data["key"]
+            #loading the api key from json file. Due to security reasons, we store the key locally
+            #our private machines as a json file which is ignored by github which making changes
 
     def get_default_location(self):
         """
@@ -79,6 +81,9 @@ class mapThat:
             json.dump(self.data, outfile)
         self.default_location = self.get_lat_log(address)
         self.prev_location = self.default_location
+        #the dufalut starting location of the user can be entered for the first time or updated 
+        #from here. everytime an update is made, the json file storing the data locally is also updated.
+        
 
     def get_lat_log(self, address):
         """
@@ -92,7 +97,7 @@ class mapThat:
         Returns
         -------
         list
-            the latitude and longitude of the given address.
+            the latitude and longitude of the given address using google maps.
 
         """
         address2 = address.replace(" ", "+")
@@ -106,7 +111,7 @@ class mapThat:
 
     def get_default_mode(self):
         """
-        this acceots the default mode of transport from the user and stores it ot the json file
+        this accepts the default mode of transport from the user and stores it ot the json file
 
         Returns
         -------
@@ -204,7 +209,7 @@ class mapThat:
                 print("Default mode of transport:", self.mode)
                 print("Default Location: ", data['add'].replace("+", " "))
                 print("Max time in mins between 2 events to go directly from one event to another:",
-                      str(self.time_bw_event))
+                      str(int(self.time_bw_event/60)))
                 if self.default_location == "":
                     print("error reading default location")
                     self.get_default_location()
@@ -251,6 +256,7 @@ class mapThat:
                     continue
                 if ('#This event has been checked by MapThat#' in event['description'] 
                     and self.prev_event_traversed == 1):
+                    #this is to make sure that there are no changes in the previous event which can affect the travel time to the current event
                     self.prev_time = datetime.datetime.strptime(
                         (event['end'].get('dateTime', event['end'].get('date'))),
                         "%Y-%m-%dT%H:%M:%S%z")
@@ -262,12 +268,11 @@ class mapThat:
             if self.prev_event_travel == 1 and self.prev_travel_event_id not in [None]:
                 self.service.events().delete(calendarId='primary',
                                              eventId=self.prev_travel_event_id).execute()
-
             start = datetime.datetime.strptime(start, "%Y-%m-%dT%H:%M:%S%z")
             self.prev_event_traversed = 0
             self.update_event(event)
             time_diff = ((start-self.prev_time).total_seconds())
-
+                #checking if the event has a location. if it doesnt have a loction, it is flagged and we check the next event
             if 'location' in event:
                 print("location: ", event['location'])
                 if self.mode is None:
@@ -279,7 +284,6 @@ class mapThat:
                     src = self.default_location
                     if self.prev_location not in [None]:
                         src = self.get_lat_log(self.prev_location)
-
                 travel_time = self.get_distance(event['location'], src)
                 self.event_create(start, travel_time)
                 self.prev_location = event['location']
@@ -291,6 +295,7 @@ class mapThat:
             self.prev_event_travel = 0
             self.prev_event_id = None
             self.prev_travel_event_id = None
+            #resetting all flags
 
     def get_distance(self, dest, src):
         """
@@ -392,7 +397,7 @@ class mapThat:
             self.get_api_key()
             self.check_login()
             self.check_user_data()
-            flag = int(input('''1.Check Calendar\n2.Change Mode\n3.Change Default Location\n4.Change max time in mins between 2 events to go directly from one event to another\n5. Exit'''))
+            flag = int(input('''1.Check Calendar\n2.Change Mode\n3.Change Default Location\n4.Change max time in mins between 2 events to go directly from one event to another\n5. Exit\n'''))
             if flag == 1:
                 self.get_event()
                 self.check_events()
