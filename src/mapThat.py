@@ -55,8 +55,7 @@ class mapThat:
                                                 (os.path.abspath(__file__))), "json", "key.json")
         if not os.path.exists(key_data):
             print(
-                '''Api Key file does not exist. Please refer to 
-                  readme to add key and restart program''')
+                '''Api Key file does not exist. Please refer to readme to add key and restart program''')
             sys.exit("Thank You for Using MapThat")
         with open(key_data) as json_file:
             data = json.load(json_file)
@@ -97,8 +96,7 @@ class mapThat:
 
         """
         address2 = address.replace(" ", "+")
-        url = '''https://maps.googleapis.com/maps/api/geocode/json?key={0}
-        &address={1}&language=en-EN'''.format(self.api_key_1, str(address2))
+        url = '''https://maps.googleapis.com/maps/api/geocode/json?key={0}&address={1}&language=en-EN'''.format(self.api_key_1, str(address2))
         r = requests.get(url)
         return [r.json().get("results")[0].
                 get("geometry").
@@ -200,8 +198,6 @@ class mapThat:
         else:
             with open(self.user_data) as json_file:
                 data = json.load(json_file)
-                print(data.keys())
-                print(data)
                 self.mode = data['mode']
                 self.time_bw_event = int(data['time_bw_event'])
                 self.default_location = self.get_lat_log(data['add'])
@@ -248,12 +244,10 @@ class mapThat:
                 self.update_event(event)
                 continue
             print("\n\n\n\n", start, event['summary'])
-            print("traversed?", str(self.prev_event_traversed))
             if 'description' in event:
                 if event['description'] == '#Created by MapThat#':
                     self.prev_event_travel = 1
                     self.prev_travel_event_id = event['id']
-                    print("travel event")
                     continue
                 if ('#This event has been checked by MapThat#' in event['description'] 
                     and self.prev_event_traversed == 1):
@@ -264,11 +258,8 @@ class mapThat:
                         self.prev_location = event['location']
                     self.prev_event_traversed = 1
                     self.prev_event_travel = 0
-                    print("traversed event without change in prev event")
                     continue
-            print("prev event not travel and not traversed without change")
             if self.prev_event_travel == 1 and self.prev_travel_event_id not in [None]:
-                print("delete travel event")
                 self.service.events().delete(calendarId='primary',
                                              eventId=self.prev_travel_event_id).execute()
 
@@ -281,8 +272,7 @@ class mapThat:
                 print("location: ", event['location'])
                 if self.mode is None:
                     self.mode = input(
-                        '''Enter exact string out of following:
-                            [DRIVING, WALKING, BICYCLING, TRANSIT]\n''')
+                        '''Enter exact string out of following:[DRIVING, WALKING, BICYCLING, TRANSIT]\n''')
                 if time_diff >= 3600:
                     src = self.default_location
                 else:
@@ -321,15 +311,12 @@ class mapThat:
         """
         url = 'https://maps.googleapis.com/maps/api/distancematrix/json?'
         dest_lat_lon = self.get_lat_log(dest)
-        print(src)
-        print(dest)
         if dest_lat_lon is None:
             print("Location not Found")
             return 0
         orig = str(src[0]) + " " + str(src[1])
         dest = str(dest_lat_lon[0]) + " " + str(dest_lat_lon[1])
-        url = '''https://maps.googleapis.com/maps/api/distancematrix/json?key={0}
-        &origins={1}&destinations={2}&mode={3}&language=en-EN&sensor=false'''.format(
+        url = '''https://maps.googleapis.com/maps/api/distancematrix/json?key={0}&origins={1}&destinations={2}&mode={3}&language=en-EN&sensor=false'''.format(
             self.api_key_1, str(orig), str(dest), self.mode)
         r = requests.get(url)
         travel_time = r.json().get('rows')[0].get("elements")[
@@ -405,12 +392,7 @@ class mapThat:
             self.get_api_key()
             self.check_login()
             self.check_user_data()
-            flag = int(input('''1.Check Calendar\n
-                             2.Change Mode\n
-                             3.Change Default Location\n
-                             4.Change max time in mins between 2 events to go directly from one 
-                             event to another\n
-                             5. Exit'''))
+            flag = int(input('''1.Check Calendar\n2.Change Mode\n3.Change Default Location\n4.Change max time in mins between 2 events to go directly from one event to another\n5. Exit'''))
             if flag == 1:
                 self.get_event()
                 self.check_events()
